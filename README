@@ -19,6 +19,13 @@ To install this module, run the following commands:
 	make test
 	make install
 
+CONTRIBUTING
+
+The development branch lives at 
+http://helios.tapodi.net/~pdriver/Bazaar/HTTP-Server-Simple-Dispatched/. 
+Creating your own branch and sending me the URL is the preferred way to send 
+patches.
+
 SUPPORT AND DOCUMENTATION
 
 After installing, you can find documentation for this module with the
@@ -29,7 +36,6 @@ perldoc command.
 Or at Search CPAN:
 
     http://search.cpan.org/dist/HTTP-Server-Simple-Dispatched
-
 
 COPYRIGHT AND LICENCE
 

@@ -1,4 +1,8 @@
 Revision history for HTTP-Server-Simple-Dispatched
 
+0.02    Automatic setting of Content-Length header to avoid some sticky
+        problems where the trailing request newline was treated as part of the
+        body by most user-agents.
+
 0.01    Tue March 11
         First release.

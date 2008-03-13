@@ -61,7 +61,7 @@ test_http 'hello' {
 	<< 200
 	<< Content-type: text/plain
 	<< 
-	<< Hello, world!\n
+	<< Hello, world!
 }
 
 test_http 'say' {
@@ -69,7 +69,7 @@ test_http 'say' {
 
 	<< 200
 	<<
-	<< You asked me to say arglebargle.\n
+	<< You asked me to say arglebargle.
 }
 
 test_http 'counter1' {
@@ -77,7 +77,7 @@ test_http 'counter1' {
 
 	<< 200
 	<<
-	<< Called 1 times.\n
+	<< Called 1 times.
 }
 
 test_http 'counter2' {
@@ -85,7 +85,7 @@ test_http 'counter2' {
 
 	<< 200
 	<<
-	<< Called 2 times.\n
+	<< Called 2 times.
 }
 
 test_http 'error' {

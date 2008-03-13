@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                HTTP-Server-Simple-Dispatched
-version:             0.01
+version:             0.02
 abstract:            Django-like regex dispatching with request and response objects - no CGI.pm cruft!
 license:             ~
 author:              

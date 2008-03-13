@@ -6,13 +6,13 @@ HTTP::Server::Simple::Dispatched - Django-like regex dispatching with request an
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
 use Moose;
 use Moose::Util::TypeConstraints;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 extends qw(
 	Moose::Object 
@@ -128,9 +128,7 @@ sub static {
 			$fh->close();
 
 			$content ||= q();
-			use bytes;
 			$response->content($content);
-			$response->content_length(length $content);
 			$response->content_type($content ? $type : 'text/plain');
 		};
 		return 1 unless $@; 
@@ -165,6 +163,10 @@ Handlers receive three arguments:  An L<HTTP::Response>, an L<HTTP::Request>, an
 =item
 
 Your handler should return a true value if it handles the request - return 0 otherwise (that entry didn't exist in the database, etc.) and a standard 404 will be generated unless another handler picks it up.
+
+=item
+
+Content-Length will be set for you if you do not set it yourself.  This is I<probably> what you want.  If you do not, manually set Content-Length to whatever you think it should be.
 
 =item
 
@@ -320,6 +322,11 @@ sub handler {
 		$response->headers->content_type('text/plain');
 		$response->content($response->status_line);
 	}
+
+	unless (defined $response->content_length) {
+		use bytes;
+		$response->content_length(length $response->content);
+	}
 	print $response->as_string;
 }
 
@@ -333,6 +340,10 @@ Paul Driver, C<< <frodwith at cpan.org> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-http-server-simple-dispatched at rt.cpan.org>, or through the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=HTTP-Server-Simple-Dispatched>. I will be notified, and then you'll automatically be notified of progress on your bug as I make changes.
+
+=head1 CONTRIBUTING
+
+The development branch lives at L<http://helios.tapodi.net/~pdriver/Bazaar/HTTP-Server-Simple-Dispatched>. Creating your own branch and sending me the URL is the preferred way to send patches.
 
 =head1 ACKNOWLEDGEMENTS
 
