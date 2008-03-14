@@ -18,8 +18,9 @@ if ($@) {
     use HTTP::Server::Simple::Dispatched qw(static);
 
     my $server = HTTP::Server::Simple::Dispatched->new(
-      port => 8081,
-      debug => 1,
+      hostname => 'myawesomeserver.org',
+      port     => 8081,
+      debug    => 1,
       dispatch => [
         qr{^/hello/} => sub {
           my ($response) = @_;

@@ -1,5 +1,6 @@
 Changes
 lib/HTTP/Server/Simple/Dispatched.pm
+lib/HTTP/Server/Simple/Dispatched/Request.pm
 Makefile.PL
 MANIFEST
 README

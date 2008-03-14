@@ -11,7 +11,7 @@ WriteMakefile(
     PREREQ_PM => {
         'Test::More' => 0,
 
-        'Moose'                        => 0,
+        'Moose' => 0,
 
         'HTTP::Server::Simple' => 0,
         'HTTP::Request'        => 0,
@@ -25,6 +25,7 @@ WriteMakefile(
 
         'Data::Dumper'      => 0,
         'Devel::Stacktrace' => 0,       
+				'Carp'              => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'HTTP-Server-Simple-Dispatched-*' },

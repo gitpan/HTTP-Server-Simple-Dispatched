@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                HTTP-Server-Simple-Dispatched
-version:             0.02
+version:             0.03
 abstract:            Django-like regex dispatching with request and response objects - no CGI.pm cruft!
 license:             ~
 author:              
@@ -8,6 +8,7 @@ author:
 generated_by:        ExtUtils::MakeMaker version 6.42
 distribution_type:   module
 requires:     
+    Carp:                          0
     Data::Dumper:                  0
     Devel::Stacktrace:             0
     File::Spec::Functions:         0

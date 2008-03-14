@@ -12,26 +12,24 @@ Version 0.02
 
 use Moose;
 use Moose::Util::TypeConstraints;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 extends qw(
-	Moose::Object 
 	HTTP::Server::Simple
 	Exporter
 );
 
-use HTTP::Server::Simple;
-use HTTP::Request;
-use HTTP::Response;
-use MIME::Types;
 use URI;
 use URI::Escape qw(uri_unescape);
-
+use MIME::Types;
 use File::Spec::Functions qw(rel2abs);
-use Errno;
+
+use HTTP::Server::Simple::Dispatched::Request;
+use HTTP::Response;
 
 use Data::Dumper;
 use Devel::StackTrace;
+use Carp;
 
 =head1 SYNOPSIS
 
@@ -40,18 +38,19 @@ Quick and dirty regex-based dispatching inspired by Django, with standard respon
     use HTTP::Server::Simple::Dispatched qw(static);
 
     my $server = HTTP::Server::Simple::Dispatched->new(
-      port => 8081,
-      debug => 1,
+      hostname => 'myawesomeserver.org',
+      port     => 8081,
+      debug    => 1,
       dispatch => [
         qr{^/hello/} => sub {
           my ($response) = @_;
-          $response->content_type('text/plain');	
+          $response->content_type('text/plain');
           $response->content("Hello, world!");
           return 1;
         },
         qr{^/say/(\w+)/} => sub {
           my ($response) = @_;
-          $response->content_type('text/plain');	
+          $response->content_type('text/plain');
           $response->content("You asked me to say $1.");
           return 1;
         },
@@ -59,7 +58,7 @@ Quick and dirty regex-based dispatching inspired by Django, with standard respon
           my ($response, $request, $context) = @_;
           my $num = ++$context->{counter};
           $response->content_type('text/plain');
-          $response->content("Called $num times.");	
+          $response->content("Called $num times.");
           return 1;
         },
         qr{^/static/(.*\.(?:png|gif|jpg))} => static("t/"),
@@ -70,6 +69,7 @@ Quick and dirty regex-based dispatching inspired by Django, with standard respon
     );
 
     $server->run();
+
 =cut
 
 sub _valid_dispatch_map {
@@ -92,7 +92,7 @@ subtype DispatchMap => as ArrayRef => where {_valid_dispatch_map($_)};
 
 =head2 $mime
 
-The registry of mime types, this is of type L<MIME::Types> and is referenced
+The registry of mime types, this is a MIME::Types and is referenced
 during the serving of static files.  Not exported by default.
 
 =cut
@@ -148,7 +148,7 @@ our @EXPORT_OK = qw(static $mime);
 
 =head1 ATTRIBUTES
 
-These are L<Moose> attributes: see its documentation for details, or treat them like regular perl read/write object accessors with convenient keyword arguments in the constructor.  
+These are Moose attributes: see its documentation for details, or treat them like regular perl read/write object accessors with convenient keyword arguments in the constructor.  
 
 =head2 dispatch
 
@@ -158,7 +158,7 @@ An arrayref of regex object => coderef pairs.  This bit is why you're using this
 
 =item
 
-Handlers receive three arguments:  An L<HTTP::Response>, an L<HTTP::Request>, and the context object.  The response object defaults to a 200 OK response with text/html as the content type.  
+Handlers receive three arguments:  An HTTP::Response, an HTTP::Server::Simple::Dispatched::Request, and the context object.  The response object defaults to a 200 OK response with text/html as the content type.  
 
 =item
 
@@ -181,6 +181,17 @@ has dispatch => (
 	isa      => 'DispatchMap',
 	required => 1,
 );
+
+=head2 hostname
+
+Not to be confused with the parent class's "host" accessor, the hostname has
+nothing to do with which interface to bind the server to.  It is used to fill
+out Request objects with a full URI (in some cases, the locally known hostname
+for an interface is NOT what the outside world uses to reach it!
+
+=cut
+
+has hostname => (is => 'rw');
 
 =head2 context
 
@@ -219,27 +230,41 @@ has append_slashes => (
 
 has request => (
 	is  => 'rw',
-	isa => 'HTTP::Request',
+	isa => 'HTTP::Server::Simple::Dispatched::Request',
 );
 
 =head1 METHODS
 
-This module doesn't add any methods to L<HTTP::Server::Simple>'s interface, just makes using it a lot nicer.  See its documentation for details.
+=head2 new
+
+This is a proper subclass of HTTP::Server::Simple, but the constructor takes all L<ATTRIBUTES> and standard PERLy accessors from the parent class as keyword arguments for convenience.
 
 =cut
 
-sub BUILD {
-	my ($self, $args) = @_;
+sub new {
+	my $class = shift;
+	my %args;
 
-	# Make constructor arguments for each of the methods for convenience.
-	while (my ($key, $val) = each (%$args)) {
-		# only if there is no attribute with this name
-		if (!$self->meta->has_attribute($key)) {
-			# Get a method reference and call it.
-			my $meth = $self->can($key);
-			$meth->($self, $val) if $meth;
-		}
+	if (@_ == 1) {	
+		(ref $_[0] eq 'HASH' and %args = %{$_[0]}) 
+			or confess 'Single paramaters to new() must be a HASH ref.';
+	} else {
+		%args = @_;
 	}
+
+	my $server = $class->SUPER::new($args{port});
+
+	my $meta = $class->meta;
+	my $self = $meta->new_object(__INSTANCE__ => $server, %args);
+
+	# Moosie constructor params for normal accessors
+	foreach my $key (keys %args) {
+		if(!$meta->has_attribute($key) and my $setter = $self->can($key)) {
+			$setter->($self, $args{$key});	
+		}
+	}	
+
+	return $self;
 }
 
 sub headers {
@@ -256,20 +281,21 @@ before setup => sub {
 
 	my $uri = URI->new($args{request_uri});
 	$uri->scheme('http');
-	$uri->authority($self->host);
+	$uri->authority($self->hostname);
 	$uri->port($self->port);
 
-	my $request = HTTP::Request->new($args{method}, $uri->canonical);
-	$request->protocol($args{protocol});
-
-	$self->request($request);
+	$self->request(HTTP::Server::Simple::Dispatched::Request->new(
+		method   => $args{method},
+		uri      => $uri->canonical,
+		protocol => $args{protocol},
+		handle   => $self->stdin_handle,
+	));
 };
 
 sub handler {
 	my $self = shift;
 	my $request = $self->request;
 
-	# sensible defaults
 	my $response = HTTP::Response->new(200);
 	$response->content_type('text/html');
 	$response->protocol($request->protocol);
@@ -347,16 +373,17 @@ The development branch lives at L<http://helios.tapodi.net/~pdriver/Bazaar/HTTP-
 
 =head1 ACKNOWLEDGEMENTS
 
-The static serve code was adapted from L<HTTP::Server::Simple::Static> - I would have reused, but it didn't do what I wanted at all.
+The static serve code was adapted from HTTP::Server::Simple::Static - I would have reused, but it didn't do what I wanted at all.
 
 As mentioned elsewhere, Django's url dispatching is the inspiration for this module.
+
+=head1 SEE ALSO
+
+L<HTTP::Response>, L<HTTP::Server::Simple::Dispatched::Request>,
+L<MIME::Types>, L<Moose>, L<HTTP::Server::Simple::Dispatched>
 
 =head1 COPYRIGHT & LICENSE
 
 Copyright 2008 Paul Driver, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
-
-=cut
-
-1;
