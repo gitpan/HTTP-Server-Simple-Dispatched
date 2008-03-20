@@ -12,7 +12,7 @@ Version 0.02
 
 use Moose;
 use Moose::Util::TypeConstraints;
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 extends qw(
 	HTTP::Server::Simple
@@ -116,9 +116,10 @@ sub static {
 		my ($response, $request) = @_;
 		eval {
 			my $path = rel2abs(uri_unescape($1), $root);
-			$path =~ $child_match or die 404;
+			$path =~ $child_match or die {code => 404};
 
-			my $fh = IO::File->new($path, '<') or die (-e $path ? 403 : 404);
+			my $fh = IO::File->new($path, '<') or 
+				die {code => (-e $path ? 403 : 404)};
 
 			my $type = $mime->mimeTypeOf($path) || $default_type;
 			$fh->binmode() if $type->isBinary;
@@ -133,9 +134,8 @@ sub static {
 		};
 		return 1 unless $@; 
 
-		# These are errors we know about
-		if ($@ eq 403 || $@ eq 404) {
-			$response->code($@);
+		if (ref $@ eq 'HASH' and exists $@->{code}) {
+			$response->code($@->{code});
 			return 1;
 		}
 

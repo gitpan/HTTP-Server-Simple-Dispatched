@@ -2,14 +2,13 @@ use strict;
 use warnings;
 use IO::File;
 use Test::More;
-eval {
-	use Test::HTTP::Syntax;
-	use Test::HTTP tests => 16;
-};
-if ($@) {
-	plan skip_all => 'Test::HTTP required for these tests';
-	exit(0);
-}
+
+eval q(use Test::HTTP::Syntax);
+plan skip_all => "Test::HTTP required for these tests." if ($@);
+plan tests => 16;
+
+use Test::HTTP;
+use Test::HTTP::Syntax;
 
 
 # The indenting is retarded because this is intended to be copied verbatim

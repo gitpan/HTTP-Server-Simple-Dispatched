@@ -1,5 +1,9 @@
 Revision history for HTTP-Server-Simple-Dispatched
 
+0.04    Thu March 20
+        Fixed some errors in the tests - should skip properly for synopsis if
+        Test::HTTP isn't installed.  Also fixed a bug in static().
+
 0.03    Fri March 14
         Request should now actually read content bodies, which it did not
         before.  It doesn't precisely conform to the HTTP standard, but that's
