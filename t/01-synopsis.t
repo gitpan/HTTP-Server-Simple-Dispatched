@@ -1,11 +1,14 @@
 use strict;
 use warnings;
+
 use IO::File;
 use Test::More;
 
-eval q(use Test::HTTP::Syntax);
-plan skip_all => "Test::HTTP required for these tests." if ($@);
-plan tests => 16;
+BEGIN {
+	eval q(require Test::HTTP);
+	plan skip_all => "Test::HTTP required for these tests." if ($@);
+	plan tests => 16;
+}
 
 use Test::HTTP;
 use Test::HTTP::Syntax;

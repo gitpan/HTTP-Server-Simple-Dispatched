@@ -6,13 +6,13 @@ HTTP::Server::Simple::Dispatched - Django-like regex dispatching with request an
 
 =head1 VERSION
 
-Version 0.02
+Version 0.05
 
 =cut
 
 use Moose;
 use Moose::Util::TypeConstraints;
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 extends qw(
 	HTTP::Server::Simple

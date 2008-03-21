@@ -1,5 +1,9 @@
 Revision history for HTTP-Server-Simple-Dispatched
 
+0.05    Fri March 21
+        Finally uninstalled Test::HTTP and tracked down the test bug.  I
+        really hope this is the last time I have to fix this.
+
 0.04    Thu March 20
         Fixed some errors in the tests - should skip properly for synopsis if
         Test::HTTP isn't installed.  Also fixed a bug in static().
