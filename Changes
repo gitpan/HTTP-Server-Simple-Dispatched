@@ -1,5 +1,9 @@
 Revision history for HTTP-Server-Simple-Dispatched
 
+0.06    Mon March 24
+        301 redirects from unslashied urls will now properly redirect, and we
+				no longer clear headers, like ever.
+
 0.05    Fri March 21
         Finally uninstalled Test::HTTP and tracked down the test bug.  I
         really hope this is the last time I have to fix this.

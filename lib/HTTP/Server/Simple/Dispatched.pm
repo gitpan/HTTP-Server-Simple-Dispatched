@@ -6,13 +6,13 @@ HTTP::Server::Simple::Dispatched - Django-like regex dispatching with request an
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
 use Moose;
 use Moose::Util::TypeConstraints;
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 extends qw(
 	HTTP::Server::Simple
@@ -344,7 +344,6 @@ sub handler {
 	}
 	$response->code(404) unless ($handled);
 	if ($response->code != 200 && $response->code != 500) {
-		$response->headers->clear();
 		$response->headers->content_type('text/plain');
 		$response->content($response->status_line);
 	}
